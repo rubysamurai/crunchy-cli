@@ -503,18 +503,16 @@ async fn get_format(
             .flat_map(|s| {
                 let mut subtitles = vec![];
                 if let Some(caption) = stream.captions.get(s) {
-                    subtitles.push((caption.clone(), true))
+                    subtitles.push((caption.clone(), true));
                 }
-                if let Some(subtitle) = stream.subtitles.get(s) {
-                    // the subtitle is probably cc if the audio is not japanese or only one subtitle
-                    // exists for this stream
+                subtitles.extend(stream.subtitles.get(s).map(|subtitle| {
                     let cc = single_format.audio != Locale::ja_JP && stream.subtitles.len() == 1;
-                    // only include the subtitles if no cc subtitle is already present or if it's
-                    // not cc
                     if subtitles.is_empty() || !cc {
-                        subtitles.push((subtitle.clone(), cc))
+                        (subtitle.clone(), cc)
+                    } else {
+                        (subtitle.clone(), false)
                     }
-                }
+                }));
                 subtitles
             })
             .collect();
